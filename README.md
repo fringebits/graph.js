@@ -3,9 +3,9 @@ graph.js
 
 Basic plotting from javascript in 2d canvas. Provides a JS API, but also provides a simple way to add graphs in static content as well. i.e. Drawing a simple sin plot. Supports basic cartesian and polar plots, drawing lines, vectors, points, bars, and animating views as well. Some CSS styling properties are avialable.
 
-<graph>
-	<function>y=Math.sin(x)</function>
-</graph>
+&lt;graph&gt;
+	&lt;function>y=Math.sin(x)&lt;/function&gt;
+&lt;/graph&gt;
 
 You can see things in action at:
 http://dl.dropboxusercontent.com/u/72157/Physics/Intro.html
