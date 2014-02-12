@@ -1,0 +1,120 @@
+<html>
+	<head>
+		<style>
+html { padding: 0; margin: 0; background-color: skyblue;}
+body {
+	font-family: sans-serif;
+	max-width: 800px;
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 0;
+	margin-bottom: 0;
+	border-left: 1px solid gray;
+	border-right: 1px solid gray;
+	padding: 20px 20px;
+	background-color: rgba(255,255,255,0.75);
+}
+
+graph { position: relative; height: 400px; display: block; }
+graph > canvas { top: 0; left: 0; position: absolute; }
+graph > canvas:first-of-type { background-color: white; }
+
+cap { padding: 1em; display: block; font-size: small; }
+bar:nth-of-type(2n+1) { width: 0.5px; stroke-width: 6; padding: 0 0.4px; }
+bar:nth-of-type(2n) { width: 2px; stroke-width: 6; padding: 0 0.2px; }
+		</style>
+		<!--
+		<script src="ASCIIMathML.js"></script>
+		-->
+		<script src="Graphic.js"></script>
+		<script src="Axis.js"></script>
+		<script src="graph.js"></script>
+		<script src="BarGraph.js"></script>
+		<script src="GraphFunction.js"></script>
+		<script src="Angle.js"></script>
+		<script src="Animate.js"></script>
+		<script src="Line.js"></script>
+		<script src="Vector.js"></script>
+		<script src="Point.js"></script>
+		<script src="Axis.js"></script>
+		<script src="terms.js"></script>
+	</head>
+	<body>
+
+	<graph x1="-10" x2="10" y1="0" y2="20">
+		<function fill="rgba(0,0,255,0.25)">y = (1+0.25*Math.cos(Math.PI*2))*Math.sin(x*Math.PI*2/10)+8</function>
+		<function fill="rgba(0,0,255,0.25)">y = (1+0.25*Math.cos(Math.PI*2))*Math.sin(x*Math.PI*2/20 + 100)+8</function>
+	</graph>
+
+	<graph x1="-10" x2="10" y1="-10" y2="10">
+		<function style="background-color: rgba(0,255,0,0.25);">y = 5</function>
+		<function style="background-color: rgba(0,0,255,0.25);">x = 5</function>
+		<function style="background-color: rgba(255,0,0,0.25);">theta=r*5</function>
+	</graph>
+
+	<graph x1="0" x2="20" y1="-1" y2="11" majordivision="0" minorDivision="0" grid="false" allowpan="false" allowzoom="false">
+		<bargraph>
+			<bar height="10" fill="rgba(255,0,0,0.5)" stroke="red">Red</bar>
+			<bar height="9"  fill="rgba(255,125,0,0.5)" stroke="orange">Orange</bar>
+			<bar height="8" style="stroke: orange; background-color: rgba(255,255,0,0.5);">Yellow</bar>
+			<bar height="7" fill="rgba(0,255,0,0.5)" stroke="green">Green</bar>
+			<bar height="6" fill="rgba(0,0,255,0.5)" stroke="blue">Blue</bar>
+			<bar height="5" fill="rgba(255,0,255,0.5)" stroke="purple">Purple</bar>
+			<bar height="4" fill="rgba(0,0,0,0.5)" stroke="black">Black</bar>
+		</bargraph>
+	</graph>
+
+	<graph x1="-10" x2="10">
+		<point x="2" radius="3" style="background-color: rgba(255,0,0,0.25);">
+            <animate attr="radius" end="12" duration="5000" repeat="true"></animate>
+        </point>
+	</graph>
+
+	<graph x1="-1" x2="10" y1="-5" y2="10">
+        <function fill="red" stroke="green">y = 5*Math.cos(x/2)</function>
+        <function fill="blue">y = 5*Math.sin(x/2)</function>
+		<vector x="0" y="0" stroke="red">
+            <animate attr="y" end="5*Math.sin(dt*2*Math.PI/5000)" duration="5000"></animate>
+            <animate attr="x" end="5*Math.cos(dt*2*Math.PI/5000 + dt/2000)" duration="5000"></animate>
+        </vector>
+	</graph>
+
+	<graph x1="-1" x2="7" y1="-1" y2="7">
+        <vector x="1" y="2" stroke="blue" id="A"></vector>
+		<vector x="4" y="1" stroke="red" id="B"></vector>
+
+        <vector copy="A" offset="B" stroke="blue"></vector>
+		<vector copy="B" offset="A" stroke="red"></vector>
+
+		<vector x="5" y="3" stroke="gray" showpoint="false"></vector>
+	</graph>
+
+	<graph x1="-1" x2="7" y1="-1" y2="7">
+		<vector x="5" y="5"></vector>
+		<line x1="5" x2="5" y1="0" y2="5" stroke="rgb(200,200,255)"></line>
+		<line x1="0" x2="5" y1="0" y2="0" stroke="rgb(200,200,255)"></line>
+	</graph>
+
+	<graph x1="-3" x2="7" y1="-3" y2="7">
+		<vector copy="x" stroke="red" label="3*x" scale="3"></vector>
+        <vector copy="x" stroke="green" label="-x" scale="-1"></vector>
+		<vector x="2" y="2" stroke="blue" label="x"></vector>
+	</graph>
+
+	<graph x1="-5" x2="5" y1="-4" y2="6">
+		<vector x="-3" y="3" stroke="lightgray"></vector>
+		<vector x="1" y="4" stroke="red"></vector>
+		<vector x="-4" y="-1" offsetx="1" offsety="4" stroke="blue"></vector>
+	</graph>
+
+    <graph x1="-1" x2="5" y1="-4" y2="6">
+        <vector x="5" y="1" stroke="blue" label="a"></vector>
+        <vector x="1" y="5" stroke="red" label="b"></vector>
+        <line from="b" to="normal-a" id="c" stroke="lightgray"></line>
+
+        <angle from="a" to="c" stroke="black" radius="0.5"></angle>
+        <angle from="b" to="inside-c" stroke="black" radius="1"></angle>
+        <angle from="a" to="b" stroke="black" radius="0.5"></angle>
+    </graph>
+</body>
+</html>
