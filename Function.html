@@ -1,0 +1,27 @@
+<element name="x-function">
+	<template id="graph-template">
+		<style>
+:host {
+	position: relative;
+	display: block;
+}
+
+:host ::content > canvas,
+:host ::content {
+	top: 0;
+	left: 0;
+	position: absolute;
+	width: 100%;
+	min-height: 100%;
+	display: block;
+}
+		</style>
+		<content>
+			<canvas></canvas>
+		</content>
+	</template>
+
+	<script src="Graphic.js"></script>
+	<script src="GraphFunction2.js"></script>
+
+</element>

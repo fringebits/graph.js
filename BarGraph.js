@@ -1,98 +1,49 @@
-function BarGraph() {
+(function() {
+window.BarGraph = function(options) {
+	Graphic.call(this, options);
 }
 
-BarGraph.prototype = {
+window.BarGraph.prototype = {
 	__proto__: Graphic.prototype,
-	bars: null,
 	id: 0,
 
-	addChild: function(node, base) {
-		if (!base.children)
-			base.children = {};
-
-		var child;
-		switch(node.nodeName) {
-			case "BAR":
-				child = (Bar.prototype.fromNode(node));
-				break;
-			default:
-				Graphic.prototype.addChild(node, base);
-				return;
-		}
-
-		if (child) {
-			base.children[child.id || base.id++] = child;
-		}
-	},
-
-	fromNode: function(node, base) {
-		var p;
-		try {
-			p = new BarGraph();
-		} catch(ex) {
-			console.log("Ex: " + ex);
-		}
-
-		p.color = this.getString("color", node, "blue");
-		p.fill = this.getString("fill", node);
-		p.label = this.getString("label", node);
-		p.id = this.getString("id", node, this.id);
-
-		for (var i = 0; i < node.childNodes.length; i++) {
-			this.addChild(node.childNodes[i], p);
-		}
-
-		return p;
-	},
-
-	draw: function(ctx, graph) {
+	draw: function(graph) {
 		var x = 0;
+		this.ctx.clearRect(0, 0, graph.scrollWidth, graph.scrollHeight);
 		for (var childId in this.children) {
 			var child = this.children[childId];
 
-			if (child instanceof Bar) {
-				x += child.paddingLeft;
-				var p = graph.toScreenCoords({ x: x, y: 0 });
-				ctx.save();
-				ctx.translate(p.x, p.y);
-				child.draw(ctx, graph);
-				ctx.restore();
-				x += child.width + child.paddingRight;
+			if (!child.draw) {
+				continue;
 			}
+
+			x += child.paddingLeft;
+			var p = graph.toScreenCoords({ x: x, y: 0 });
+
+			this.ctx.save();
+			this.ctx.translate(p.x, p.y);
+			child.draw(graph, this.ctx);
+			this.ctx.restore();
+
+			x += child.width + child.paddingRight;
 		}
 	},
 }
 
-function Bar(options) {
-	this.mixin(this, options);
+window.Bar = function(options) {
+	this.width = 1;
+	this.height = 0;
+	this.paddingLeft = 0.1;
+	this.paddingRight = 0.1;
+
+	createAnimatableProperty(this, "height");
+	this.mixin(this, options, options);
+	// Graphic.call(this, options);
 }
-Bar.prototype = {
-	width: 1,
-	height: 0,
-	paddingLeft: 0.1,
-	paddingRight: 0.1,
+window.Bar.prototype = {
 	__proto__: Graphic.prototype,
 
-	fromNode: function(node, base) {
-		var p;
-		try {
-			var options = this.getBaseOptions(node);
-			this.mixin(options, {
-				paddingLeft: Graphic.prototype.getFloat("paddingLeft", node),
-				paddingRight: Graphic.prototype.getFloat("paddingRight", node),
-				label: node.textContent,
-			});
-			p = new Bar(options);
-			p.resolveStyles(node, options);
-		} catch(ex) {
-			console.log("Ex: " + ex);
-		}
-		p = Graphic.prototype.fromNode(node, p);
-
-		return p;
-	},
-
-	draw: function(ctx, graph) {
+	draw: function(graph, ctx) {
 		ctx.save();
 		this.setupDrawing(ctx);
 
@@ -109,8 +60,137 @@ Bar.prototype = {
 		ctx.fillText(this.label, p2.x/2 - measure.width/2, 15);
 
 		ctx.restore();
-	},	
+	},
 }
 
-graph.prototype.register("bargraph", BarGraph);
-graph.prototype.register("bar", Bar);
+window.BoxAndWhiskers = function(options) {
+	createAnimatableProperty(this, "min");
+	createAnimatableProperty(this, "max");
+	createAnimatableProperty(this, "median");
+	createAnimatableProperty(this, "lowerQuartile");
+	createAnimatableProperty(this, "upperQuartile");
+
+	this.min = 0;
+	this.lowerQuartile = 1;
+	this.median = 2;
+	this.upperQuartile = 3;
+	this.max = 4;
+
+	Bar.call(this, options);
+}
+
+window.BoxAndWhiskers.prototype = {
+	__proto__: Bar.prototype,
+
+	drawHorizLine: function(ctx, graph, y, x1, x2) {
+		ctx.moveTo(x1, y);
+		ctx.lineTo(x2-x1, y);
+	},
+
+	drawVertLine: function(ctx, graph, x, y1, y2) {
+		ctx.moveTo(x, y1);
+		ctx.lineTo(x, y2);
+	},
+
+	drawBox: function(ctx, graph, x1, y1, x2, y2) {
+		ctx.strokeRect(x1, y1, x2-x1, y2-y1);
+		if (this.fill) {
+			ctx.fillRect(x1, y1, x2-x1, y2-y1);
+		}
+	},
+
+	draw: function(graph, ctx) {
+		ctx.save();
+		this.setupDrawing(ctx);
+
+		var p2 = graph.toScreenCoords({ x: this.width + graph.xaxis.min,
+			                            y: this.height + graph.yaxis.max });
+
+		var min = graph.toScreenCoords({ x: 0, y: this.min + graph.yaxis.max });
+		var lowerQuartile = graph.toScreenCoords({ x: 0, y: this.lowerQuartile + graph.yaxis.max });
+		var median = graph.toScreenCoords({ x: 0, y: this.median + graph.yaxis.max });
+		var upperQuartile = graph.toScreenCoords({ x: 0, y: this.upperQuartile + graph.yaxis.max });
+		var max = graph.toScreenCoords({ x: 0, y: this.max + graph.yaxis.max });
+
+		ctx.beginPath();
+		this.drawHorizLine(ctx, graph, min.y, 0, p2.x);
+		this.drawVertLine(ctx, graph, p2.x/2, min.y, lowerQuartile.y);
+		this.drawHorizLine(ctx, graph, median.y, 0, p2.x);
+		this.drawVertLine(ctx, graph, p2.x/2, upperQuartile.y, max.y);
+		this.drawHorizLine(ctx, graph, max.y, 0, p2.x);
+		ctx.stroke();
+		this.drawBox(ctx, graph, 0, lowerQuartile.y, p2.x, upperQuartile.y);
+
+		ctx.fillStyle = this.color;
+		var measure = ctx.measureText(this.label);
+		ctx.fillText(this.label, p2.x/2 - measure.width/2, 15);
+
+		ctx.restore();
+	},
+}
+
+xtag.register('x-bargraph', {
+	extends: "div",
+	lifecycle: {
+		created: function() {
+			var options = this.getBaseOptions(this);
+			this.resolveStyles(this, options);
+			window.BarGraph.call(this, options);
+		},
+
+		inserted: function() {
+			this.canvas.setAttribute("width", this.parentNode.scrollWidth);
+			this.canvas.setAttribute("height", this.parentNode.scrollHeight);
+			this.canvas.width = this.parentNode.scrollWidth;
+			this.canvas.height = this.parentNode.scrollHeight;
+		},
+		removed: function(){ },
+		attributeChanged: function(){ },
+	},
+	events: { },
+	accessors: { },
+	methods: window.BarGraph.prototype,
+});
+xtag.register('x-bar', {
+	extends: "div",
+	lifecycle: {
+		created: function() {
+			var options = this.getBaseOptions(this);
+			this.resolveStyles(this, options);
+			window.Bar.call(this, options);
+		},
+
+		inserted: function() {
+		},
+		removed: function(){ },
+		attributeChanged: function(){ },
+	},
+	events: { },
+	accessors: { },
+	methods: window.Bar.prototype,
+});
+xtag.register('x-boxAndWhiskers', {
+	extends: "div",
+	lifecycle: {
+		created: function() {
+			var options = this.getBaseOptions(this);
+			this.resolveStyles(this, options);
+			window.BoxAndWhiskers.call(this, options);
+		},
+
+		inserted: function() {
+			this.min = this.getFloat("min", this);
+			this.max = this.getFloat("max", this);
+			this.lowerQuartile = this.getFloat("lowerQuartile", this);
+			this.upperQuartile = this.getFloat("upperQuartile", this);
+			this.median = this.getFloat("median", this);
+		},
+		removed: function(){ },
+		attributeChanged: function(){ },
+	},
+	events: { },
+	accessors: { },
+	methods: window.BoxAndWhiskers.prototype,
+});
+
+})();

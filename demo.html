@@ -1,0 +1,24 @@
+<html>
+	<head>
+		<style type="text/css">
+table-chart {
+	border: 1px solid black;
+	display: block;
+	width: 100px;
+	height: 100px;
+}
+		</style>
+		<script async src="polyfill.js"></script>
+		<link rel="import" href="chart.html">
+	</head>
+	<body>
+		<button onclick="document.body.appendChild(document.createElement('table-chart'));">Add chart</button>
+		<button onclick="document.body.appendChild(new TableChart());">Add chart via constructor</button>
+		<button onclick="document.body.innerHTML += '<table-chart></table-chart>';">Add chart via innerHTML</button>
+		<br/>
+		<button onclick="var c = document.querySelector('table-chart'); c.parentNode.removeChild(c);">Remove chart</button>
+		<br/>
+		<button onclick="document.querySelector('table-chart').setAttribute('x-chart-type', true);">Change type</button>
+		<table-chart></table-chart>
+	</body>
+</html>

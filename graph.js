@@ -1,53 +1,58 @@
-function graph(options) {
-	this.mixin(this, options);
+function renderer() {
 }
 
-graph.prototype = {
-	__proto__: Graphic.prototype,
-	grid: true,
-	majorDivision: 5,
-	minorDivision: 5,
-	allowPan: true,
-	allowZoom: true,
+renderer.prototype = {
+	beginPath: function() { },
+	moveTo: function(x, y) { },
+	lineTo: function(x, y) { },
+	drawText: function(text, x, y) { },
+}
 
-	addCanvas: function(width, height) {
-		var canvas = document.createElement("canvas");
-		canvas.setAttribute("width", width);
-		canvas.setAttribute("height", height);
-		canvas.width = width;
-		canvas.height = height;
-		return canvas;
-	},
+function CanvasRenderer(width, height) {
+	renderer.call(this);
+	this.element = document.createElement("canvas");
+	this.ctx = this.element.getContext('2d');
 
-	start: function() {
-		try {
-			var graphs = document.getElementsByTagName("graph");
-			for (var i = 0; i < graphs.length; i++) {
-				var node = graphs[i];
-				var g = graph.prototype.fromNode(node);
-				g.axisCanvas = g.addCanvas(node.scrollWidth, node.scrollHeight);
+	this.element.setAttribute("width", width);
+	this.element.setAttribute("height", height);
+	this.element.width = width;
+	this.element.height = height;
+}
 
-				node.appendChild(g.axisCanvas);
-				g.drawAxis(g.axisCanvas.getContext('2d'));
+CanvasRenderer.prototype = {
+	__proto__: renderer.prototype,
+	set strokeStyle(val) { this.ctx.strokeStyle = val; },
+	set fillStyle(val) { this.ctx.fillStyle = val; },
+	set lineWidth(val) { this.ctx.lineWidth = val; },
 
-				g.plotCanvas = [];
-				for (var j in g.children) {
-					var c = g.addCanvas(node.scrollWidth, node.scrollHeight);
-					g.plotCanvas.push(c);
-				}
+	get width() { return this.element.width; },
+	get height() { return this.element.height; },
 
-				for (var j in g.plotCanvas) {
-					node.appendChild(g.plotCanvas[j]);
-				}
+	beginPath: function() { this.ctx.beginPath(); },
+	moveTo: function(x, y) { this.ctx.moveTo(x, y); },
+	lineTo: function(x, y) { this.ctx.lineTo(x, y); },
+	stroke: function() { this.ctx.stroke(); },
+	fill: function() { this.ctx.fill(); },
+	clearRect: function(x,y,w,h) { this.ctx.clearRect(x,y,w,h); },
+	save: function() { this.ctx.save(); },
+	restore: function() { this.ctx.restore(); },
+	translate: function(x, y) { this.ctx.translate(x,y); },
+	rotate: function(angle) { this.ctx.rotate(angle); },
+	strokeRect: function(x,y,w,h) { this.ctx.strokeRect(x,y,w,h); },
+	fillRect: function(x,y,w,h) { this.ctx.fillRect(x,y,w,h); },
+	measureText: function(label) { return this.ctx.measureText(label); },
+	fillText: function(label, x, y) { this.ctx.fillText(label, x, y); },
+	arc: function(x, y, r, start, end, flags) { this.ctx.arc(x,y,r,start,end,flags); },
+}
 
-				g.draw();
-			}
-		} catch(ex) {
-			console.log("err: " + ex);
-		}
-	},
+xtag.register('x-accordion', {
+  // extend existing elements
+  extends: 'div',
+  lifecycle: {
+    created: function() {
+    },
 
-	fromNode: function(node) {
+    inserted: function() {
 		var options = this.getBaseOptions(node);
 		this.mixin(options, {
 			majorDivision: this.getFloat("majordivision", node),
@@ -55,8 +60,8 @@ graph.prototype = {
 			grid: this.getBool("grid", node),
 			allowPan: this.getBool("allowpan", node),
 			allowZoom: this.getBool("allowzoom", node),
-		})
-		var g = new graph(options);
+		});
+
 		this.setupAxis("x", node, g);
 		this.setupAxis("y", node, g);
 		this.setupAxis("z", node, g);
@@ -66,14 +71,96 @@ graph.prototype = {
 			g.addNode(node.children[keys[i]]);
 		}
 
-		if (g.allowPan)
+		if (g.allowPan) {
 			node.addEventListener("mousedown", g, false);
-		if (g.allowZoom)
+		}
+
+		if (g.allowZoom) {
 			node.addEventListener("wheel", g, false);
+		}
+
 		node.addEventListener("mouseover", g, false);
 		node.addEventListener("mouseout", g, false);
+		node.addEventListener("invalidate", g, false);
 
 		return g;
+	},
+
+	removed: function(){
+	},
+
+    attributeChanged: function(){
+    },
+
+	  events: {
+	    'click:delegate(x-toggler)': function(){
+	      // activate a clicked toggler
+	    }
+	  },
+	  accessors: {
+	    'togglers': {
+	      get: function(){
+	        // return all toggler children
+	      },
+	      set: function(value){
+	        // set the toggler children
+	      }
+	    }
+	  },
+	  methods: {
+	    nextToggler: function(){
+	      // activate the next toggler
+	    },
+	    previousToggler: function(){
+	      // activate the previous toggler
+	    }
+	  },
+  },
+
+function graph(options) {
+	Graphic.call(this, options);
+}
+
+graph.prototype = {
+	__proto__: Graphic.prototype,
+	grid: false,
+	majorDivision: 5,
+	minorDivision: 5,
+	allowPan: true,
+	allowZoom: true,
+	layers: [],
+
+	addCanvas: function(width, height) {
+		return new CanvasRenderer(width, height);
+	},
+
+	start: function() {
+		var graphs = document.getElementsByTagName("graph");
+		for (var i = 0; i < graphs.length; i++) {
+			var node = graphs[i];
+			var g = graph.prototype.fromNode(node);
+			g.axisCanvas = g.addCanvas(node.scrollWidth, node.scrollHeight);
+
+			node.appendChild(g.axisCanvas.element);
+			// g.drawAxis(g.axisCanvas);
+
+			g.plotCanvas = [];
+			for (var j in g.children) {
+				var c = g.addCanvas(node.scrollWidth, node.scrollHeight);
+				g.plotCanvas.push(c);
+			}
+
+			for (var j in g.plotCanvas) {
+				node.appendChild(g.plotCanvas[j].element);
+			}
+
+			for (var j in g.children) {
+				var child = g.children[j];
+				child.setup(g);
+			}
+
+			g.draw();
+		}
 	},
 
 	handleEvent: function(event) {
@@ -91,14 +178,20 @@ graph.prototype = {
 			case "mouseup":
 				this.endMouseDrag(event);
 				break;
-			case "mouseout":
-				this.hovering = false;
-				break;
-			case "mouseover":
-				this.hovering = true;
+			case "invalidate":
+				if (!this.animating) {
+					this.draw();
+				}
 				break;
 			default:
 		}
+
+		for (var i in this.children) {
+			if (this.children[i].intersects(event.clientX, event.clientY)) {
+				this.children[i].handleEvent(event);
+			}
+		}
+
 	},
 
 	mouseZoom: function(event) {
@@ -106,19 +199,28 @@ graph.prototype = {
 		this.zoom(event.deltaY, event.clientX - box.left, event.clientY - box.top);
 	},
 
+	_invalidate: true,
+	get invalidate() { return this._invalidate; },
+	set invalidate(val) { this._invalidate = val; },
+
 	zoom: function(delta, x, y) {
 		if (this.startDragPoint)
 			clearTimeout(this.startDragPoint);
 
-		if (this.xaxis)
+		if (this.xaxis) {
 			this.xaxis.zoom(delta, x/this.width);
-		if (this.yaxis)
-			this.yaxis.zoom(delta, 1-y/this.height);
+		}
 
-		this.drawAll();
+		if (this.yaxis) {
+			this.yaxis.zoom(delta, 1-y/this.height);
+		}
+
+		this.invalidate = true;
+		this.draw();
 		this.startDragPoint = setTimeout((function() {
+			this.invalidate = true;
 			this.startDragPoint = null;
-			this.drawAll();
+			this.draw();
 		}).bind(this), 100);
 	},
 
@@ -134,10 +236,14 @@ graph.prototype = {
 		window.removeEventListener("mouseup", this, false);
 	},
 
-	startDrag: function(x,y) { this.startDragPoint = {x:x, y:y}; },
+	startDrag: function(x,y) {
+		this.startDragPoint = {x:x, y:y};
+	},
+
 	drag: function(x,y) {
-		if (!this.startDragPoint)
+		if (!this.startDragPoint) {
 			return;
+		}
 
 		var dx = x - this.startDrag.x;
 		var dy = y - this.startDrag.y;
@@ -150,12 +256,15 @@ graph.prototype = {
 			this.yaxis.shift(dy);
 		}
 
-		this.drawAll();
+		this.invalidate = true;
+		this.draw();
 		this.startDragPoint = {x:x, y:y};
 	},
+
 	endDrag: function(x,y) {
 		this.startDragPoint = null;
-		this.drawAll();
+		this.invalidate = true;
+		this.draw();
 	},
 
 	setupAxis: function(axisName, node, graph) {
@@ -175,16 +284,15 @@ graph.prototype = {
 	yaxis: new Axis(Axis.prototype.Y, -10, 10),
 	zaxis: new Axis(Axis.prototype.Z, -10, 10),
 
-	drawAll: function() {
-		this.drawAxis(this.axisCanvas.getContext('2d'));
-		this.draw();
-	},
-
 	drawAxis: function(ctx) {
-		ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+		if ((!this.xaxis || !this.xaxis.invalidate) && (!this.yaxis || !this.yaxis.invalidate)) {
+			return;
+		}
+
+		ctx.clearRect(0, 0, ctx.width, ctx.height);
 		this.canvas = ctx.canvas;
-		this.width = ctx.canvas.width;
-		this.height = ctx.canvas.height;
+		this.width = ctx.width;
+		this.height = ctx.height;
 
 		if (this.yaxis && this.width > this.height) {
 			var range = (this.yaxis.max - this.yaxis.min)*this.width/this.height;
@@ -202,6 +310,7 @@ graph.prototype = {
 				offset = this.yaxis.toScreenCoords(this, Math.min(this.yaxis.max, Math.max(this.yaxis.min,0)));
 			}
 			this.xaxis.draw(ctx, this, offset);
+			this.xaxis.invalidate = false
 		}
 
 		if (this.yaxis) {
@@ -209,61 +318,38 @@ graph.prototype = {
 			if (this.xaxis)
 				offset = this.xaxis.toScreenCoords(this, Math.min(this.xaxis.max, Math.max(this.xaxis.min,0)));
 			this.yaxis.draw(ctx, this, offset);
+			this.yaxis.invalidate = false
 		}
 	},
 
 	draw: function() {
-		for (var i in this.children) {
-			if (this.children[i].setupPoints)
-				this.children[i].setupPoints(this);
-		}
+		this.drawAxis(this.axisCanvas);
 
+		var redraw = 0;
 		var index = 0;
+
 		for (var i in this.children) {
-			var ctx = this.plotCanvas[index].getContext("2d");
-			ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-			this.children[i].draw(ctx, this);
+			if (this.invalidate || this.children[i].invalidate) {
+				// Do this before we draw because drawing might re-invalidate the Graphic
+				this.children[i].invalidate = false;
+				var ctx = this.plotCanvas[index];
+				ctx.clearRect(0, 0, ctx.width, ctx.height);
+				this.children[i].draw(ctx, this);
+				redraw = redraw || this.children[i].invalidate;
+			}
+
 			index++;
 		}
 
-		if (this.startTime)
-			return;
+		this._invalidate = false;
 
-		var step = (function(timestamp) {
-			// Don't animate if we're dragging
-			if (!this.hovering || this.startDragPoint) {
-				requestAnimationFrame(step);
-				return;
-			}
-
-			if (this.startTime == 0)
-				this.startTime = Date.now();
-
-			var dt = Date.now() - this.startTime;
-
-			var redraw = false;
-			var index = 0;
-			for (var i in this.children) {
-				if (!this.children[i].animate)
-					continue;
-
-				if (this.children[i].animate(dt)) {
-					var ctx = this.plotCanvas[index].getContext("2d");
-					ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-					this.children[i].draw(ctx, this);
-					redraw = true;
-				}
-				index++;
-			}
-
-			if (redraw)
-				requestAnimationFrame(step);
-
-		}).bind(this);
-
-		requestAnimationFrame(step);
+		if (redraw) {
+			this.animating = true;
+			requestAnimationFrame(this.draw.bind(this));
+		} else {
+			this.animating = false;
+		}
 	},
-	startTime: 0,
 
 	registeredNodes: { },
 	register: function(name, graphic) {
@@ -324,14 +410,16 @@ graph.prototype = {
 	toScreenCoords: function(point) {
 		var p = {};
 
-		if (point.x !== undefined && this.xaxis) {
-			p.x = this.xaxis.toScreenCoords(this, point.x);
+		var x = point.x;
+		if (x !== undefined && this.xaxis) {
+			p.x = this.xaxis.toScreenCoords(this, x);
 		} else {
 			p.x = this.width/2;
 		}
 
-		if (point.y !== undefined && this.yaxis) {
-			p.y = this.yaxis.toScreenCoords(this, point.y);
+		var y = point.y;
+		if (y !== undefined && this.yaxis) {
+			p.y = this.yaxis.toScreenCoords(this, y);
 		} else {
 			p.y = this.height/2;
 		}
@@ -339,5 +427,5 @@ graph.prototype = {
 		return p;
 	},
 }
-document.addEventListener("DOMContentLoaded", graph.prototype.start, false);
 
+document.addEventListener("DOMContentLoaded", graph.prototype.start, false);

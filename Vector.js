@@ -1,5 +1,5 @@
 function Vector(options) {
-	this.mixin(this, options);
+	Line.call(this, options);
 }
 
 Vector.prototype = {
@@ -7,10 +7,9 @@ Vector.prototype = {
 	arrowWidth: 10,
 	arrowHeight: 15,
 	showPoint: false,
-	get x() { return this.x2 - this.x1; },
-	set x(val) { this.x2 = this.x1 + val; },
-	get y() { return this.y2 - this.y1; },
-	set y(val) { this.y2 = this.y1 + val; },
+
+	get x2() { return this.x; },
+	get y2() { return this.y; },
 
 	fromNode: function(node) {
 		var options = this.getBaseOptions(node);
@@ -21,17 +20,20 @@ Vector.prototype = {
 			offset: this.getNode("offset", node),
 			copy: this.getNode("copy", node),
 		});
+
 		var p = new Vector(options);
 		this.resolveStyles(node, options);
-		p.x2 += p.x1;
-		p.y2 += p.y1;
+		// p.x2 += p.x1;
+		// p.y2 += p.y1;
 		p = Line.prototype.fromNode(node, p);
+
 		return p;
 	},
 
 	draw: function(ctx, graph) {
+		console.log("draw vector");
 		Line.prototype.draw.call(this, ctx, graph);
-		var p2 = graph.toScreenCoords({ x: this.x2*this.scale, y: this.y2*this.scale });
+		var p2 = graph.toScreenCoords({ x: this.x*this.scale, y: this.y*this.scale });
 
 		// Draw an arrow on the end of the vector
 

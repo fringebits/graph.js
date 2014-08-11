@@ -1,0 +1,34 @@
+<element name="x-graph">
+	<template id="graph-template">
+		<style>
+	:host {
+		position: relative;
+		display: block;
+		border: 1px solid red;
+		min-height: 500px;
+	}
+
+	:host ::content {
+		border: 1px solid blue;
+	}
+
+	:host ::content > canvas {
+		border: 1px solid green;
+		top: 0;
+		left: 0;
+		position: absolute;
+		width: 100%;
+		min-height: 100%;
+		display: block;
+	}
+		</style>
+
+		<content>
+			<canvas></canvas>
+		</content>
+
+	</template>
+
+	<script src="Graphic.js"></script>
+	<script src="Graph.js"></script>
+</element>

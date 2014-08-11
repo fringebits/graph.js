@@ -1,5 +1,5 @@
 (function() {
-window.GraphFunction = function(options) {
+var GraphFunction = function(options) {
 	Graphic.call(this, options);
 
 	this.valCache = { };
@@ -14,7 +14,7 @@ window.GraphFunction = function(options) {
 	this.useTime = functionOptions.useTime;
 }
 
-window.GraphFunction.prototype = {
+GraphFunction.prototype = {
 	__proto__: Graphic.prototype,
 
 	shouldInvalidate: function() {
@@ -87,31 +87,32 @@ window.GraphFunction.prototype = {
 	}
 }
 
-xtag.register('x-function', {
-	extends: "div",
-	lifecycle: {
-		created: function() {
-			var options = this.getBaseOptions(this);
-			this.mixin(options, {
-				step: this.getFloat("this.step", this),
-			});
-			this.resolveStyles(this, options);
-			window.GraphFunction.call(this, options);
-		},
+var FunctionElementPrototype = Object.create(HTMLElement.prototype);
+FunctionElementPrototype.createdCallback = function() {
+	var options = this.getBaseOptions(this);
+	this.mixin(options, {
+		step: this.getFloat("this.step", this),
+	});
+	this.resolveStyles(this, options);
+	GraphFunction.call(this, options);
+};
 
-		inserted: function() {
-			this.canvas.setAttribute("width", this.parentNode.scrollWidth);
-			this.canvas.setAttribute("height", this.parentNode.scrollHeight);
-			this.canvas.width = this.parentNode.scrollWidth;
-			this.canvas.height = this.parentNode.scrollHeight;
-		},
-		removed: function(){ },
-		attributeChanged: function(){ },
-	},
+FunctionElementPrototype.attachedCallback = function() {
+	this.canvas.setAttribute("width", this.parentNode.scrollWidth);
+	this.canvas.setAttribute("height", this.parentNode.scrollHeight);
+	this.canvas.width = this.parentNode.scrollWidth;
+	this.canvas.height = this.parentNode.scrollHeight;
+};
 
-	events: { },
-	accessors: { },
-	methods: window.GraphFunction.prototype,
+FunctionElementPrototype.attributeChangedCallback = function (attr, oldVal, newVal) {
+};
+
+for (var i in GraphFunction.prototype) {
+	FunctionElementPrototype[i] = GraphFunction.prototype[i];
+}
+
+window.FunctionElement = document.registerElement('x-function', {
+	prototype: FunctionElementPrototype
 });
 
 })();

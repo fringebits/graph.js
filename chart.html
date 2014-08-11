@@ -1,0 +1,56 @@
+<script>
+  console.log("Table chart");
+  var TableChartPrototype = Object.create(HTMLTableElement.prototype, {
+    _visible: { configurable: true, value: true },
+
+    createdCallback: { value: function() {
+        var t = document.currentScript.ownerDocument.querySelector('#table-chart-template');
+        var clone = document.importNode(t.content, true);
+        this.createShadowRoot().appendChild(clone);
+
+        this._canvas = this.shadowRoot.firstElementChild;
+    }},
+
+    attachedCallback: { value: function() {
+        console.log("attached", this);
+        this._visible = true;
+        this.draw();
+    }},
+
+    detachedCallback: { value: function() {
+        console.log("detached");
+        this._visible = false;
+    }},
+
+    attributeChangedCallback: { value: function(attr, oldVal, newVal) {
+        console.log("attr: " + attr + " -- " + oldVal + " -- " + newVal);
+    }},
+
+    draw: { value: function() {
+        console.log("draw");
+        if (!this._visible) {
+            return;
+        }
+
+        var type = this.chartType;
+        var color = this.chartColor;
+        var canvas = this._canvas;
+        console.log(canvas);
+
+        var ctx = canvas.getContext("2d");
+        ctx.moveTo(0,0);
+        ctx.lineTo(100,100);
+        ctx.stroke();
+
+        this.dispatchEvent(new Event('draw'));
+    }},
+  });
+
+  document.registerElement('table-chart', {
+    prototype: TableChartPrototype
+  });
+</script>
+
+<template id="table-chart-template">
+    <canvas></canvas>
+</template>

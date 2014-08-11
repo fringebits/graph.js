@@ -1,8 +1,5 @@
-function Line(x1, x2, y1, y2) {
-	this.x1 = x1;
-	this.x2 = x2;
-	this.y1 = y1;
-	this.y2 = y2;
+function Line(options) {
+	Graphic.call(this, options);
 }
 
 Line.prototype = {
@@ -30,15 +27,18 @@ Line.prototype = {
 		if (!p) {
 			var options = this.getBaseOptions(node);
 			this.mixin(options, {
+				// Can these points be functions?
 				x1: this.getFloat("x1", node),
 				x2: this.getFloat("x2", node),
 				y1: this.getFloat("y1", node),
 				y2: this.getFloat("y2", node),
+
 				showPoint: this.getBool("showPoint", node),
 				from: this.getNode("from", node),
 				to: this.getNode("to", node),
 				scale: this.getFloat("scale", node)
 			});
+
 			p = new Line(options);
 			p.resolveStyles(node, options);
 		}

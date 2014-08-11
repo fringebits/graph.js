@@ -5,6 +5,7 @@ function Animate(attribute, endVal, duration) {
 }
 
 Animate.prototype = {
+	__proto__: Graphic.prototype,
 	startTime: 0,
 	attr: "",
 	end: 0,

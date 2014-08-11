@@ -1,0 +1,33 @@
+<element name="x-graph" attribute="divisions grid panning zooming">
+<!--
+this.reflectAttribute('major-division', 'majorDivision', Graph.prototype.attrChange);
+this.reflectAttribute('minor-division', 'minordivision', Graph.prototype.attrChange);
+this.reflectAttribute('show-grid', 'showGrid', Graph.prototype.attrChange);
+this.reflectAttribute('allow-panning', 'allowPanning', Graph.prototype.attrChange);
+this.reflectAttribute('allow-zooming', 'allowZooming', Graph.prototype.attrChange);
+-->
+    <template>
+        <style type="text/css">
+canvas { top: 0; left: 0; position: absolute; }
+canvas:first-of-type { background-color: white; }
+        </style>
+
+        <div>Graph</div>
+    </template>
+
+    <script>
+Polymer("x-graph", {
+    // __proto__: Graphic.prototype,
+    grid: false,
+    divisions: [5, 5],
+    panning: true,
+    zooming: true,
+
+    gridChanged: function(old, newVal) { },
+    divisionsChanged: function(old, newVal) { },
+    panningChanged: function(old, newVal) { },
+    zoomingChanged: function(old, newVal) { },
+});
+    </script>
+
+</element>
